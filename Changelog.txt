@@ -1,0 +1,30 @@
+==1.0.5==
+  * Released 2016-01-12
+  * Removed deprecated entries in metadata.php
+
+==1.0.4==
+  * Released 2015-09-23
+  * Added pre validation check for received order data. Will check existance of order, articles and payment of import data.
+
+==1.0.3==
+  * Changed deprecated total_tax to vat_rate which will be used for calculation
+  * Changed token field to be password
+
+==1.0.2==
+  * Added packshot of module
+  * Changed namespace to Idealo\Direktkauf
+  * Changed module naming and added dynamic parameters to build script
+  * No order flagging if Exception has been thrown
+  * Fixed storno reason RETOUR for orders already sent  
+  * Created consistend folder structure
+  * Added trigger to resent fulfillment if trackcode has been changed
+  * Added method for sending exceptions
+  * Hardened code if its running into errors while requesting orders
+
+==1.0.1==
+  * Released 2015-07-31
+  * Fixed some minor bugs
+
+==1.0.0==
+  * Released 2015-07-28
+  * Initial release of the FATCHIP idealo module
