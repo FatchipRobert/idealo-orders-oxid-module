@@ -25,7 +25,7 @@ class fcidealo_import_orders extends fcidealo_base
     
     protected function orderAlreadyExists($aOrder) 
     {
-        $sQuery = "SELECT oxid FROM oxorder WHERE FCIDEALO_ORDERNR = '".mysql_real_escape_string($aOrder['order_number'])."' LIMIT 1";
+        $sQuery = "SELECT oxid FROM oxorder WHERE FCIDEALO_ORDERNR = '".mysql_real_escape_string($aOrder['order_number'])."' AND oxshopid = '".self::$_sShopId."' LIMIT 1";
         $sOxid = oxDb::getDb()->GetOne($sQuery);
         if($sOxid) {
             return true;
@@ -185,7 +185,7 @@ class fcidealo_import_orders extends fcidealo_base
     {
         $sPaymentType = $aOrder['payment']['payment_method'];
         
-        $sPaymentMap = oxRegistry::getConfig()->getShopConfVar('sIdealoPaymentMap');
+        $sPaymentMap = self::_getShopConfVar('sIdealoPaymentMap');
         $aPaymentMap = unserialize(html_entity_decode($sPaymentMap));
         if($aPaymentMap && isset($aPaymentMap[$sPaymentType])) {
             $sPaymentType = $aPaymentMap[$sPaymentType];
@@ -203,7 +203,7 @@ class fcidealo_import_orders extends fcidealo_base
         $sDeliveryType = $aOrder['fulfillment']['type'];
         $aOxidOrder['OXDELTYPE'] = $sDeliveryType;
         
-        $sDeliveryMap = oxRegistry::getConfig()->getShopConfVar('sIdealoDeliveryMap');
+        $sDeliveryMap = self::_getShopConfVar('sIdealoDeliveryMap');
         $aDeliveryMap = unserialize(html_entity_decode($sDeliveryMap));
         if($aDeliveryMap && isset($aDeliveryMap[$sDeliveryType])) {
             $aOxidOrder['OXDELTYPE'] = $aDeliveryMap[$sDeliveryType]['type'];
@@ -217,7 +217,7 @@ class fcidealo_import_orders extends fcidealo_base
     protected function getNextOrderNr() 
     {
         $blSeperate = $this->getConfig()->getConfigParam('blSeparateNumbering');
-        $sIdent = $blSeperate ? 'oxOrder_' . $this->getConfig()->getShopId() : 'oxOrder';
+        $sIdent = $blSeperate ? 'oxOrder_' . self::$_sShopId : 'oxOrder';
         return oxNew('oxCounter')->getNext($sIdent);
     }
     
@@ -358,7 +358,7 @@ class fcidealo_import_orders extends fcidealo_base
             $aData['OXVAT']         = $this->formatPrice($aIdealoOrder['vat_rate']);
             $aData['OXINSERT']      = date('Y-m-d');
             $aData['oxsubclass']    = 'oxarticle';
-            $aData['oxordershopid'] = $this->getConfig()->getShopId();
+            $aData['oxordershopid'] = self::$_sShopId;
 
             $aData = $this->modifyOrderarticle($aIdealoOrder, $aData);
             
@@ -386,7 +386,7 @@ class fcidealo_import_orders extends fcidealo_base
                     $aData['OXVAT']         = $this->formatPrice($aIdealoOrder['vat_rate']);
                     $aData['OXINSERT']      = date('Y-m-d');
                     $aData['oxsubclass']    = 'oxarticle';
-                    $aData['oxordershopid'] = $this->getConfig()->getShopId();
+                    $aData['oxordershopid'] = self::$_sShopId;
                     
                     $aData = $this->modifyOrderarticle($aIdealoOrder, $aData);
                     
@@ -403,7 +403,7 @@ class fcidealo_import_orders extends fcidealo_base
             
             $aOxidOrder = array();
             $aOxidOrder['OXID']                 = oxUtilsObject::getInstance()->generateUID();
-            $aOxidOrder['OXSHOPID']             = $this->getConfig()->getShopId();
+            $aOxidOrder['OXSHOPID']             = self::$_sShopId;
             $aOxidOrder['OXUSERID']             = $sUserId;
             $aOxidOrder['OXORDERDATE']          = date('Y-m-d H:i:s', strtotime($aOrder['created_at']));
             $aOxidOrder['OXORDERNR']            = $this->getNextOrderNr();
@@ -486,7 +486,7 @@ class fcidealo_import_orders extends fcidealo_base
         }
         else {
             $this->sendHandleOrderError( $aOrder, $this->sLastOrderHandleErrorType );
-            $this->sendOrderRevocation( $aOrder['order_number'], $this->sLastOrderHandleErrorType );
+            $this->sendOrderRevocation( $aOrder['order_number'], 'MERCHANT_DECLINE', $this->sLastOrderHandleErrorType );
         }
     }
     

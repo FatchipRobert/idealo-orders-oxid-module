@@ -22,15 +22,41 @@ class fcidealo_base extends oxBase
     protected static $oClient = null;
     protected $aIdealoCache = null;
     protected $sLogFileName = 'fcIdealo.log';
+    protected static $_sShopId = null;
+    
+    public function __construct() {
+        parent::__construct();
+        self::_setShopId();
+    }  
+    
+    protected static function _setShopId() {
+        if($_SERVER && array_key_exists('argv', $_SERVER) !== false && array_key_exists(1, $_SERVER['argv']) !== false) {
+            self::$_sShopId = $_SERVER['argv'][1];
+        } elseif($_REQUEST && isset($_REQUEST['shopid'])) {
+            self::$_sShopId = $_REQUEST['shopid'];
+        } else {
+            self::$_sShopId = oxRegistry::getConfig()->getActiveShop()->getId();
+        }
+    }
+    
+    protected static function _getShopConfVar($sVarName) {
+        $sValue = oxRegistry::getConfig()->getShopConfVar($sVarName, self::$_sShopId, 'module:fcidealo');
+        if(!$sValue) {
+            $sValue = oxRegistry::getConfig()->getShopConfVar($sVarName, self::$_sShopId, '');
+        }
+        return $sValue;
+    }
     
     public static function getClient()
     {
         if(self::$oClient === null) {
+            if(self::$_sShopId === null) {
+                self::_setShopId();
+            }
             require_once dirname(__FILE__).'/../sdk/autoload.php';
-            //require_once dirname(__FILE__).'/../sdk/idealo/Direktkauf/REST/Client.php';
-            $oConfig = oxRegistry::getConfig();
-            $sToken = $oConfig->getShopConfVar('sIdealoToken');
-            $blIsLive = $oConfig->getShopConfVar('sIdealoMode') == 'live' ? true : false;
+
+            $sToken = self::_getShopConfVar('sIdealoToken');
+            $blIsLive = self::_getShopConfVar('sIdealoMode') == 'live' ? true : false;
 
             self::$oClient = new idealo\Direktkauf\REST\Client($sToken, $blIsLive);
         }
@@ -63,14 +89,14 @@ class fcidealo_base extends oxBase
         }
     }
     
-    protected function sendOrderRevocation($sIdealoOrderNr, $sOptionalReason = '') 
+    protected function sendOrderRevocation($sIdealoOrderNr, $sReason = '', $sMessage = '') 
     {
         $oClient = fcidealo_base::getClient();
-        $sResponse = $oClient->sendRevocationStatus($sIdealoOrderNr, $sOptionalReason);
+        $sResponse = $oClient->sendRevocationStatus($sIdealoOrderNr, $sReason, $sMessage);
         if($sResponse === false && $oClient->getCurlError() != '') {
             $this->sendRevocationErrorMail($sIdealoOrderNr, $oClient);
         } else {
-            $this->writeLogEntry('Sended revoke status to Idealo for IdealoOrderNr'.$sIdealoOrderNr);
+            $this->writeLogEntry('Sended revoke status to Idealo for IdealoOrderNr: '.$sIdealoOrderNr.' with message: '.$sMessage);
         }
     }
 
@@ -160,7 +186,7 @@ class fcidealo_base extends oxBase
     }
 
     protected function writeLogEntry($sMessage) {
-        if ((bool)oxRegistry::getConfig()->getShopConfVar('sIdealoLoggingActive')) {
+        if ((bool)self::_getShopConfVar('sIdealoLoggingActive')) {
             $sMessage = date("Y-m-d h:i:s")." ".$sMessage." \n";
             
             $sLogFilePath = getShopBasePath().'/log/'.$this->sLogFileName;
@@ -174,7 +200,7 @@ class fcidealo_base extends oxBase
     {
         $this->writeLogEntry($sText);
         $sText .= '('.date('Y-m-d H:i:s').')';
-        $sErrorMail = oxRegistry::getConfig()->getShopConfVar('sIdealoEmail');
+        $sErrorMail = self::_getShopConfVar('sIdealoEmail');
         if ($sErrorMail) {
             mail($sErrorMail, $sSubject, $sText);
         }
