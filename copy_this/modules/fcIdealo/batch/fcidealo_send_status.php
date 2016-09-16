@@ -48,7 +48,7 @@ class fcidealo_send_status extends fcidealo_base
     
     protected function handleRevocation($aOrderInfo)
     {
-        $sReason = oxRegistry::getConfig()->getShopConfVar('sIdealoStornoReason');
+        $sReason = self::_getShopConfVar('sIdealoStornoReason');
         
         /**
          * If order has been already sent storno reason is fixed to RETOUR
