@@ -1,3 +1,11 @@
+==1.0.9==
+  * Released 2016-12-01
+  * Fixed price calculation for sums and orders with multiple products
+
+==1.0.8==
+  * README optimization
+  * metadata optimization
+
 ==1.0.7==
   * Released 2016-08-02
   * Fixed problems with use in Oxid Enterprise Edition

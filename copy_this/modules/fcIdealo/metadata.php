@@ -25,7 +25,7 @@ $aModule = array(
     'title'         => 'idealo Direktkauf OXID',
     'description'   => '',
     'thumbnail'     => 'fc_idealo_direktkauf_oxid_produktbox.png',
-    'version'       => '1.0.7_5855',
+    'version'       => '1.0.9_6333',
     'author'        => 'idealo internet GmbH',
     'url'           => '',
     'extend'        => array(
@@ -53,7 +53,7 @@ $aModule = array(
     ),
     'settings' => array(
         array('group' => 'FCIDEALO_GENERAL', 'name' => 'sIdealoMode', 'type' => 'select',  'value' => 'test', 'constrains' => 'live|test', 'position' => 10),
-        array('group' => 'FCIDEALO_GENERAL', 'name' => 'sIdealoToken', 'type' => 'str',  'value' => '', 'position' => 20),
+        array('group' => 'FCIDEALO_GENERAL', 'name' => 'sIdealoToken', 'type' => 'password',  'value' => '', 'position' => 20),
         array('group' => 'FCIDEALO_GENERAL', 'name' => 'sIdealoEmail', 'type' => 'str',  'value' => '', 'position' => 30),
         array('group' => 'FCIDEALO_GENERAL', 'name' => 'sIdealoStornoReason', 'type' => 'select',  'value' => 'MERCHANT_DECLINE', 'constrains' => 'CUSTOMER_REVOKE|MERCHANT_DECLINE|RETOUR', 'position' => 40),
         array('group' => 'FCIDEALO_GENERAL', 'name' => 'sIdealoLoggingActive', 'type' => 'bool', 'value' => '1', 'position' => 50),
