@@ -280,8 +280,8 @@ class fcidealo_import_orders extends fcidealo_base
     protected function updateStock($aItemData) 
     {
         $oOrderArticle = oxNew('oxorderarticle');
-        $oOrderArticle->load($aData['OXID']);
-        $oOrderArticle->updateArticleStock($aData['OXAMOUNT'] * (-1), $this->getConfig()->getConfigParam('blAllowNegativeStock'));
+        $oOrderArticle->load($aItemData['OXID']);
+        $oOrderArticle->updateArticleStock($aItemData['OXAMOUNT'] * (-1), $this->getConfig()->getConfigParam('blAllowNegativeStock'));
     }
     
     protected function getAddressHash($aAddress)
@@ -339,8 +339,7 @@ class fcidealo_import_orders extends fcidealo_base
     {
         foreach ($aIdealoOrder['line_items'] as $aItem) {
             
-            $dTotalTax = ( (double)$aItem['price'] * (double)$aIdealoOrder['vat_rate'] ) / 100.00;
-            $dNetPrice = $aItem['price'] - $dTotalTax;
+            $dNetPrice = $this->getNetPrice($aItem['item_price'], $aIdealoOrder['vat_rate']);
             
             $aData = array();
             $aData['OXID']          = oxUtilsObject::getInstance()->generateUID();
@@ -350,10 +349,10 @@ class fcidealo_import_orders extends fcidealo_base
             $aData['OXARTNUM']      = $aItem['sku'];
             $aData['OXTITLE']       = $aItem['title'];
             $aData['OXNPRICE']      = $this->formatPrice($dNetPrice);
-            $aData['OXPRICE']       = $this->formatPrice($aItem['price']);
-            $aData['OXBPRICE']      = $this->formatPrice($aItem['price']);
+            $aData['OXPRICE']       = $this->formatPrice($aItem['item_price']);
+            $aData['OXBPRICE']      = $this->formatPrice($aItem['item_price']);
             $aData['OXNETPRICE']    = $this->formatPrice(($dNetPrice * $aItem['quantity']));
-            $aData['OXBRUTPRICE']   = $this->formatPrice(($aItem['price'] * $aItem['quantity']));
+            $aData['OXBRUTPRICE']   = $this->formatPrice(($aItem['price']));
             $aData['OXVATPRICE']    = $aData['OXBRUTPRICE'] - $aData['OXNETPRICE'];
             $aData['OXVAT']         = $this->formatPrice($aIdealoOrder['vat_rate']);
             $aData['OXINSERT']      = date('Y-m-d');
@@ -447,12 +446,8 @@ class fcidealo_import_orders extends fcidealo_base
             $dFulfillmentOptionSum              = $this->getFulfillmentOptionSum($aOrder);
             $dShippingCost                      = $aOrder['total_shipping'] - $dFulfillmentOptionSum;
             $dBrutSum                           = $aOrder['total_line_items_price'] + $dFulfillmentOptionSum;
-            $dTotalTax                          = ( (double)$aOrder['total_line_items_price'] * (double)$aOrder['vat_rate'] ) / 100;
-            $dNetSum                            = $aOrder['total_line_items_price'] - $dTotalTax;
-            if($dFulfillmentOptionSum > 0) {
-                $dNetSum                        = $this->getNetPrice($dBrutSum, $aOrder['vat_rate']);
-                $dTotalTax                      = $dBrutSum - $dNetSum;
-            }
+            $dNetSum                            = $this->getNetPrice($dBrutSum, $aOrder['vat_rate']);
+            $dTotalTax                          = $dBrutSum - $dNetSum;
             
             $aOxidOrder['OXTOTALBRUTSUM']       = $this->formatPrice($dBrutSum);
             $aOxidOrder['OXTOTALNETSUM']        = $this->formatPrice($dNetSum);
@@ -463,7 +458,7 @@ class fcidealo_import_orders extends fcidealo_base
             $aOxidOrder['OXARTVATPRICE2']       = 0;
             $aOxidOrder['OXDELVAT']             = $this->formatPrice($aOrder['vat_rate']);
             $aOxidOrder['OXDELCOST']            = $this->formatPrice($dShippingCost);
-            $aOxidOrder['OXPAYVAT']             = $this->formatPrice($aOrder['vat_rate']);
+            $aOxidOrder['OXPAYVAT']             = 0;
             $aOxidOrder['OXPAYCOST']            = 0;// not existing in Idealo?
             $aOxidOrder['OXVOUCHERDISCOUNT']    = 0;// not existing in Idealo?
             $aOxidOrder['OXCURRENCY']           = $aOrder['currency'];
