@@ -25,11 +25,7 @@ $aModule = array(
     'title'         => 'idealo Direktkauf OXID',
     'description'   => '',
     'thumbnail'     => 'fc_idealo_direktkauf_oxid_produktbox.png',
-<<<<<<< HEAD
-    'version'       => '1.0.9_6333',
-=======
-    'version'       => '1.0.8_6008',
->>>>>>> refs/remotes/idealo/master
+    'version'       => '1.1.0_6496',
     'author'        => 'idealo internet GmbH',
     'url'           => '',
     'extend'        => array(
