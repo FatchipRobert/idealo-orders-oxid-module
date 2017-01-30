@@ -22,7 +22,7 @@ class fcidealo_import_orders extends fcidealo_base
     protected $blIsDebugMode = false;
     protected $aTestProductMap = array();
     protected $sLastOrderHandleErrorType = '';
-    protected $_dOrderVat = null;
+    protected $_aOrderVats = null;
     
     protected function orderAlreadyExists($aOrder) 
     {
@@ -268,24 +268,60 @@ class fcidealo_import_orders extends fcidealo_base
         return $this->getCacheValue($sSKU, 'productId');
     }
 
-    protected function getOrderVat($aOrder)
+    protected function getVatForProduct($aItem)
     {
-        if ($this->_dOrderVat === null) {
-            $dVat = false;
-            foreach ($aOrder['line_items'] as $aItem) {
-                $sProductId = $this->getProductId($aItem);
-                $oProduct = oxNew('oxarticle');
-                if ($oProduct->load($sProductId)) {
-                    $dVat = $oProduct->getPrice()->getVat();
-                    break;
-                }
-            }
-            if (!$dVat && array_key_exists('vat_rate', $aOrder) !== false) {
-                $dVat = $aOrder['vat_rate'];
-            }
-            $this->_dOrderVat = $dVat;
+        $dVat = false;
+        $sProductId = $this->getProductId($aItem);
+        $oProduct = oxNew('oxarticle');
+        if ($oProduct->load($sProductId)) {
+            $dVat = $oProduct->getPrice()->getVat();
         }
-        return $this->_dOrderVat;
+        return $dVat;
+    }
+
+    protected function getOrderNetSum($aOrder)
+    {
+        $dOrderNetSum = 0;
+        $aOrderVats = $this->getOrderVats($aOrder);
+        foreach ($aOrderVats as $aSingleVat) {
+            $dOrderNetSum += $aSingleVat['netprice'];
+        }
+        return $dOrderNetSum;
+    }
+
+    protected function addFulfillmentItemsToOrderVats($aOrder, $aOrderVats)
+    {
+        foreach ($aOrderVats as $dVat => $aOrderVat) {
+            $dFulfillmentSum = $this->getFulfillmentOptionSum($aOrder);
+            $dVatPrice = $this->getVatPrice($dFulfillmentSum, $dVat);
+            $dNetPrice = $this->getNetPrice($dFulfillmentSum, $dVat);
+            $aOrderVats[(string)$dVat]['vatprice'] += $dVatPrice;
+            $aOrderVats[(string)$dVat]['netprice'] += $dNetPrice;
+            break;
+        }
+        return $aOrderVats;
+    }
+
+    protected function getOrderVats($aOrder)
+    {
+        if ($this->_aOrderVats === null) {
+            $aOrderVats = array();
+            foreach ($aOrder['line_items'] as $aItem) {
+                $dVat = $this->getVatForProduct($aItem);
+                if (array_key_exists((string)$dVat, $aOrderVats) === false) {
+                    $aOrderVats[(string)$dVat] = array('vatprice' => 0, 'netprice' => 0, 'vatrate' => $dVat);
+                }
+                $dVatPrice = $this->getVatPrice($aItem['price'], $dVat);
+                $dNetPrice = $this->getNetPrice($aItem['price'], $dVat);
+                $aOrderVats[(string)$dVat]['vatprice'] += $dVatPrice;
+                $aOrderVats[(string)$dVat]['netprice'] += $dNetPrice;
+            }
+            krsort($aOrderVats);
+            $aOrderVats = $this->addFulfillmentItemsToOrderVats($aOrder, $aOrderVats);
+
+            $this->_aOrderVats = $aOrderVats;
+        }
+        return $this->_aOrderVats;
     }
     
     protected function updateStock($aData)
@@ -328,11 +364,23 @@ class fcidealo_import_orders extends fcidealo_base
     {
         return number_format((double)$dPrice, 2, ".", "");
     }
-    
-    protected function getNetPrice($dBrutPrice, $dVat)
+
+    protected function getNetPrice($dBrutPrice, $dVat, $blFormat = true)
     {
         $dNetPrice = $dBrutPrice / (1 + ($dVat / 100));
+        if ($blFormat === true) {
+            $dNetPrice = $this->formatPrice($dNetPrice);
+        }
         return $dNetPrice;
+    }
+
+    protected function getVatPrice($dBrutPrice, $dVat, $blFormat = true)
+    {
+        $dVatPrice = ($dBrutPrice / (100 + $dVat)) * $dVat;
+        if ($blFormat === true) {
+            $dVatPrice = $this->formatPrice($dVatPrice);
+        }
+        return $dVatPrice;
     }
 
     protected function getFulfillmentOptionSum($aOrder)
@@ -348,10 +396,10 @@ class fcidealo_import_orders extends fcidealo_base
     
     protected function handleOrderarticles($aIdealoOrder, $sOrderId)
     {
-        $dVatRate = $this->getOrderVat($aIdealoOrder);
         foreach ($aIdealoOrder['line_items'] as $aItem) {
+            $dProductVat = $this->getVatForProduct($aItem);
             
-            $dNetPrice = $this->getNetPrice($aItem['item_price'], $dVatRate);
+            $dNetPrice = $this->getNetPrice($aItem['item_price'], $dProductVat);
             
             $aData = array();
             $aData['OXID']          = oxUtilsObject::getInstance()->generateUID();
@@ -360,13 +408,13 @@ class fcidealo_import_orders extends fcidealo_base
             $aData['OXARTID']       = $this->getProductId($aItem);
             $aData['OXARTNUM']      = $aItem['sku'];
             $aData['OXTITLE']       = $aItem['title'];
-            $aData['OXNPRICE']      = $this->formatPrice($dNetPrice);
+            $aData['OXNPRICE']      = $dNetPrice; // is already formatted
             $aData['OXPRICE']       = $this->formatPrice($aItem['item_price']);
             $aData['OXBPRICE']      = $this->formatPrice($aItem['item_price']);
             $aData['OXNETPRICE']    = $this->formatPrice(($dNetPrice * $aItem['quantity']));
             $aData['OXBRUTPRICE']   = $this->formatPrice(($aItem['price']));
             $aData['OXVATPRICE']    = $aData['OXBRUTPRICE'] - $aData['OXNETPRICE'];
-            $aData['OXVAT']         = $this->formatPrice($dVatRate);
+            $aData['OXVAT']         = $this->formatPrice($dProductVat);
             $aData['OXINSERT']      = date('Y-m-d');
             $aData['oxsubclass']    = 'oxarticle';
             $aData['oxordershopid'] = self::$_sShopId;
@@ -379,8 +427,13 @@ class fcidealo_import_orders extends fcidealo_base
         }
 
         if(isset($aIdealoOrder['fulfillment']['fulfillment_options']) && count($aIdealoOrder['fulfillment']['fulfillment_options']) > 0) {
+            $aVatRates = $this->getOrderVats($aIdealoOrder);
+            $aVatRate1 = array_shift($aVatRates);
             foreach ($aIdealoOrder['fulfillment']['fulfillment_options'] as $aFulfillmentItem) {
-                $dNetPrice = $this->getNetPrice($aFulfillmentItem['price'], $dVatRate);
+                if (!isset($aFulfillmentItem['price']) || !isset($aFulfillmentItem['name'])) {
+                    continue;
+                }
+                $dNetPrice = $this->getNetPrice($aFulfillmentItem['price'], $aVatRate1['vatrate']);
 
                 $aData = array();
                 $aData['OXID']          = oxUtilsObject::getInstance()->generateUID();
@@ -389,13 +442,13 @@ class fcidealo_import_orders extends fcidealo_base
                 $aData['OXARTID']       = '';
                 $aData['OXARTNUM']      = '';
                 $aData['OXTITLE']       = $this->getFulfillmentOptionTitle($aFulfillmentItem);
-                $aData['OXNPRICE']      = $this->formatPrice($dNetPrice);
+                $aData['OXNPRICE']      = $dNetPrice; // already formatted
                 $aData['OXPRICE']       = $this->formatPrice($aFulfillmentItem['price']);
                 $aData['OXBPRICE']      = $this->formatPrice($aFulfillmentItem['price']);
-                $aData['OXNETPRICE']    = $this->formatPrice($dNetPrice);
+                $aData['OXNETPRICE']    = $dNetPrice; // already formatted
                 $aData['OXBRUTPRICE']   = $this->formatPrice($aFulfillmentItem['price']);
                 $aData['OXVATPRICE']    = $this->formatPrice(($aFulfillmentItem['price'] - $dNetPrice));
-                $aData['OXVAT']         = $this->formatPrice($dVatRate);
+                $aData['OXVAT']         = $this->formatPrice($aVatRate1['vatrate']);
                 $aData['OXINSERT']      = date('Y-m-d');
                 $aData['oxsubclass']    = 'oxarticle';
                 $aData['oxordershopid'] = self::$_sShopId;
@@ -411,7 +464,6 @@ class fcidealo_import_orders extends fcidealo_base
     {
         if( $this->orderDataIsValid( $aOrder ) === true ) {
             $sUserId = $this->handleUser($aOrder);
-            $dVatRate = $this->getOrderVat($aOrder);
             
             $aOxidOrder = array();
             $aOxidOrder['OXID']                 = oxUtilsObject::getInstance()->generateUID();
@@ -459,17 +511,23 @@ class fcidealo_import_orders extends fcidealo_base
             $dFulfillmentOptionSum              = $this->getFulfillmentOptionSum($aOrder);
             $dShippingCost                      = $aOrder['total_shipping'] - $dFulfillmentOptionSum;
             $dBrutSum                           = $aOrder['total_line_items_price'] + $dFulfillmentOptionSum;
-            $dNetSum                            = $this->getNetPrice($dBrutSum, $dVatRate);
-            $dTotalTax                          = $dBrutSum - $dNetSum;
+            $dNetSum                            = $this->getOrderNetSum($aOrder);
+
+            $aVatRates = $this->getOrderVats($aOrder);
+            $aVatRate1 = array_shift($aVatRates);
+            $aVatRate2 = array_shift($aVatRates);
+            if (!$aVatRate2) {
+                $aVatRate2 = array('vatprice' => 0, 'netprice' => 0, 'vatrate' => '0');
+            }
             
             $aOxidOrder['OXTOTALBRUTSUM']       = $this->formatPrice($dBrutSum);
-            $aOxidOrder['OXTOTALNETSUM']        = $this->formatPrice($dNetSum);
+            $aOxidOrder['OXTOTALNETSUM']        = $dNetSum; // already formatted
             $aOxidOrder['OXTOTALORDERSUM']      = $this->formatPrice($aOrder['total_price']);
-            $aOxidOrder['OXARTVAT1']            = $this->formatPrice($dVatRate);
-            $aOxidOrder['OXARTVATPRICE1']       = $this->formatPrice($dTotalTax);
-            $aOxidOrder['OXARTVAT2']            = 0;
-            $aOxidOrder['OXARTVATPRICE2']       = 0;
-            $aOxidOrder['OXDELVAT']             = $this->formatPrice($dVatRate);
+            $aOxidOrder['OXARTVAT1']            = $this->formatPrice($aVatRate1['vatrate']);
+            $aOxidOrder['OXARTVATPRICE1']       = $this->formatPrice($aVatRate1['vatprice']);
+            $aOxidOrder['OXARTVAT2']            = $this->formatPrice($aVatRate2['vatrate']);
+            $aOxidOrder['OXARTVATPRICE2']       = $this->formatPrice($aVatRate2['vatprice']);
+            $aOxidOrder['OXDELVAT']             = $this->formatPrice($aVatRate1['vatrate']);
             $aOxidOrder['OXDELCOST']            = $this->formatPrice($dShippingCost);
             $aOxidOrder['OXPAYVAT']             = 0;
             $aOxidOrder['OXPAYCOST']            = 0;// not existing in Idealo?
