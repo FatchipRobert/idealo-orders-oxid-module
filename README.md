@@ -1,4 +1,4 @@
-# idealo Direktkauf OXID
+# idealo Direktkauf OXID eShop plugin
 
 ## License
 Apache License 2.0, see LICENSE
@@ -40,14 +40,17 @@ The update-process is exactly the same!
    This script sends the fulfillment- and revocation-status to idealo. It also sends the shop-order-nr when this didn't work the first time.
    We recommend setting this to once every hour.
 
-## ENTERPRISE EDITION:
-When using the Oxid Enterprise Edition, you have to add both cronjobs for EVERY subshop that uses the module.
+## OXID Enterprise Edition:
+When using the OXID Enterprise Edition, you have to add both cronjobs for EVERY subshop that uses the module.
 You have to add the shop-id as parameter to the script.
 When your cronjob is triggered over crontab or something similar just execute the script in the following way:
 "YOUR_SHOP/modules/fcIdealo/batch/fcidealo_import_orders_batch.php 4" for the shop-id 4
 When your cronjob is triggered over web then add the parameter to the URL in the following way:
 "http://YOUR_SHOP/modules/fcIdealo/batch/fcidealo_import_orders_batch.php?shopid=4" for the shop-id 4
 
-## Deinstallation
+## De-installation
 
 1. Go to Extensions->Modules, select the "idealo Direktkauf OXID" extension and press the "Deactivate" Button in the "Overview" tab.
+
+## How to contribute
+If you want to contribute to *idealo Direktkauf XT-Commerce Plugin* either open up an issue or fork the repository and make a pull request with your changes.
