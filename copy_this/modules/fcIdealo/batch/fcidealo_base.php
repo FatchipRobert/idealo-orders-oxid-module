@@ -28,7 +28,17 @@ class fcidealo_base extends oxBase
         parent::__construct();
         self::_setShopId();
     }  
-    
+
+    protected static function _getModuleVersion()
+    {
+        $aModule = array();
+        include_once dirname(__FILE__).DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'metadata.php';
+        if (isset($aModule['version'])) {
+            return $aModule['version'];
+        }
+        return 'version_not_found';
+    }
+
     protected static function _setShopId() {
         if($_SERVER && array_key_exists('argv', $_SERVER) !== false && array_key_exists(1, $_SERVER['argv']) !== false) {
             self::$_sShopId = $_SERVER['argv'][1];
@@ -58,7 +68,11 @@ class fcidealo_base extends oxBase
             $sToken = self::_getShopConfVar('sIdealoToken');
             $blIsLive = self::_getShopConfVar('sIdealoMode') == 'live' ? true : false;
 
-            self::$oClient = new idealo\Direktkauf\REST\Client($sToken, $blIsLive);
+            $sERPShopSystem = 'Oxid';
+            $sERPShopSystemVersion = oxRegistry::getConfig()->getVersion();
+            $sIntegrationPartner = 'FATCHIP';
+            $sInterfaceVersion = self::_getModuleVersion();
+            self::$oClient = new idealo\Direktkauf\REST\Client($sToken, $blIsLive, $sERPShopSystem, $sERPShopSystemVersion, $sIntegrationPartner, $sInterfaceVersion);
         }
         return self::$oClient;
     }
