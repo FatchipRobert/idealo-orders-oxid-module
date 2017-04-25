@@ -21,7 +21,7 @@ class fcidealo_module_config extends fcidealo_module_config_parent
 
     protected $_aDefaultIdealoPaymentTypes = array(
         'CREDITCARD' => 'Credit Card Payment Method (Heidelpay)',
-        'SOFORT' => 'SOFORT Überweisung Payment Method',
+        'SOFORT' => 'SOFORT &Uuml;berweisung Payment Method',
         'PAYPAL' => 'PayPal Payment Method',
     );
     
