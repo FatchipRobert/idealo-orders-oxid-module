@@ -1,3 +1,4 @@
+
 ==1.1.1==
   * Released 2017-04-21
   * Added compatibility to OXID CE/PE 4.8.x - EE 5.1.x
@@ -5,10 +6,11 @@
 ==1.1.0==
   * Released 2017-01-30
   * Fixed VAT calculation
+  * Added contribution instructions.
 
 ==1.0.9==
   * Released 2016-12-01
-  * Fixed price calculation for sums and orders with multiple products
+  * Fixed price calculation for sums and orders with multiple products.
 
 ==1.0.8==
   * README optimization
