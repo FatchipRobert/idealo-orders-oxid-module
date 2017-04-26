@@ -7,8 +7,8 @@ Apache License 2.0, see LICENSE
 fc
 
 ## Version
-1.0.9_6333
-November 30 2016
+1.1.1
+April 26 2017
 
 ## Link
 http://www.idealo.de
@@ -62,10 +62,6 @@ Apache License 2.0, see LICENSE
 
 ## Prefix
 fc
-
-## Version
-1.1.0_6519
-January 27 2017
 
 ## Link
 http://www.idealo.de
