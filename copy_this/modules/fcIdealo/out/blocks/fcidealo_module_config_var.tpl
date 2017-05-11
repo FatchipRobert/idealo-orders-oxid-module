@@ -1,4 +1,4 @@
-[{if $module_var == 'sIdealoToken' || $module_var == 'sIdealoPaymentMap' || $module_var == 'sIdealoDeliveryMap' || $module_var == 'sIdealoConfigTest'}]
+[{if $module_var == 'sIdealoToken' || $module_var == 'sIdealoPaymentMap' || $module_var == 'sIdealoDeliveryMap' || $module_var == 'sIdealoConfigTest' || $module_var == 'sIdealoFirstStatus'}]
     [{if $module_var == 'sIdealoToken'}]
         <dl>
             <dt>
@@ -67,6 +67,19 @@
                 </dl>
             [{/if}]
         [{/if}]
+    [{elseif $module_var == 'sIdealoFirstStatus'}]
+        <dl>
+            <dt>
+                <select class="select" name="confselects[[{$module_var}]]" [{ $readonly }]>
+                    [{foreach from=$oView->fcIdealoGetAllOrderFolders() key=sFolder item=sColor}]
+                        <option value="[{$sFolder}]" [{if $confselects.$module_var == $sFolder}]selected[{/if}]>[{ oxmultilang ident=$sFolder noerror=true }]</option>
+                    [{/foreach}]
+                </select>
+            </dt>
+            <dd>
+                [{oxmultilang ident="SHOP_MODULE_`$module_var`"}]
+            </dd>
+        </dl>
     [{/if}]
 [{else}]
     [{$smarty.block.parent}]

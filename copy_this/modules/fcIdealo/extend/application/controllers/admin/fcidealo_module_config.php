@@ -176,4 +176,9 @@ class fcidealo_module_config extends fcidealo_module_config_parent
         return empty($sEmail);
     }
 
+    public function fcIdealoGetAllOrderFolders()
+    {
+        return $this->getConfig()->getConfigParam('aOrderfolder');
+    }
+
 }

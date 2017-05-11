@@ -35,6 +35,7 @@ $aLang = array(
 'SHOP_MODULE_sIdealoStornoReason_CUSTOMER_REVOKE'   => 'Kunden-Widerruf',
 'SHOP_MODULE_sIdealoStornoReason_MERCHANT_DECLINE'  => 'Vom H&auml;ndler abgelehnt',
 'SHOP_MODULE_sIdealoStornoReason_RETOUR'            => 'Retoure',
+'SHOP_MODULE_sIdealoFirstStatus'                    => 'Bestell-Ordner bei Import',
 'SHOP_MODULE_sIdealoLoggingActive'                  => 'Logging aktiv',
 'HELP_SHOP_MODULE_sIdealoLoggingActive'             => 'Zu finden unter: *SHOPROOT*/log/fcIdealo.log',
 'FCIDEALO_TOKEN_SUCCESS'                            => 'Der Verbindungs-Aufbau mit diesem Token war erfolgreich.',

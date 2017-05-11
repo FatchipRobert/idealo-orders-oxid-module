@@ -186,7 +186,11 @@ class fcidealo_import_orders extends fcidealo_base
     
     protected function getOrderFolder($aOrder)
     {
-        return 'ORDERFOLDER_NEW';        
+        $sFolder = self::_getShopConfVar('sIdealoFirstStatus');
+        if (!$sFolder) {
+            $sFolder = 'ORDERFOLDER_NEW';
+        }
+        return $sFolder;
     }
     
     protected function setDeliveryInfo($aOxidOrder, $aOrder)

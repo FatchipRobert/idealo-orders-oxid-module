@@ -25,7 +25,7 @@ $aModule = array(
     'title'         => 'idealo Direktkauf OXID',
     'description'   => '',
     'thumbnail'     => 'fc_idealo_direktkauf_oxid_produktbox.png',
-    'version'       => '1.1.1',
+    'version'       => '1.1.2',
     'author'        => 'idealo internet GmbH',
     'url'           => '',
     'extend'        => array(
@@ -56,7 +56,8 @@ $aModule = array(
         array('group' => 'FCIDEALO_GENERAL', 'name' => 'sIdealoToken', 'type' => 'password',  'value' => '', 'position' => 20),
         array('group' => 'FCIDEALO_GENERAL', 'name' => 'sIdealoEmail', 'type' => 'str',  'value' => '', 'position' => 30),
         array('group' => 'FCIDEALO_GENERAL', 'name' => 'sIdealoStornoReason', 'type' => 'select',  'value' => 'MERCHANT_DECLINE', 'constrains' => 'CUSTOMER_REVOKE|MERCHANT_DECLINE|RETOUR', 'position' => 40),
-        array('group' => 'FCIDEALO_GENERAL', 'name' => 'sIdealoLoggingActive', 'type' => 'bool', 'value' => '1', 'position' => 50),
+        array('group' => 'FCIDEALO_GENERAL', 'name' => 'sIdealoFirstStatus', 'type' => 'select',  'value' => '', 'position' => 50),
+        array('group' => 'FCIDEALO_GENERAL', 'name' => 'sIdealoLoggingActive', 'type' => 'bool', 'value' => '1', 'position' => 60),
         array('group' => 'FCIDEALO_PAYMENT_MAP', 'name' => 'sIdealoPaymentMap', 'type' => 'select',  'value' => '', 'position' => 10),
         array('group' => 'FCIDEALO_DELIVERY_MAP', 'name' => 'sIdealoDeliveryMap', 'type' => 'select',  'value' => '', 'position' => 10),
         array('group' => 'FCIDEALO_CONFIG_TEST', 'name' => 'sIdealoConfigTest', 'type' => 'str',  'value' => '', 'position' => 10),
